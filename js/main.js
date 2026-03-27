@@ -1,105 +1,120 @@
 $(function(){
+  //변수
+  const body = $("body");
+  const gotoTop = $(".gototop");
   const hd = "#hd-header";
-  let viewportH = window.innerHeight;
   let scTop = $(window).scrollTop();
-  // 각 섹션별 헤더디자인 구현(다크모드)
-  // 1. each() 문법으로 완성
-  let sections = []; //각 섹션별(.wh) 위치를 담을 배열
-  const updateSectionPos = () => { //화살표 함수. 비교연산자아님!! 내가 속한 구간은 this로 봄
-    sections = [];
-    $(".main-section.wh").each(function(){//내용은 그룹괄호, 블럭괄호 안에서 엔터 치고 적어야 한다.
-      sections.push({ //뭔가 집어넣을 때 push
-        top: $(this).offset().top,
-        bottom: $(this).offset().top + $(this).height()
-      }); 
-    }); 
-    //console.log(sections);
-  } 
-  updateSectionPos();
-  $(window).on("resize", updateSectionPos);
-  $(window).on("scroll", () => {
-    let scTop = $(window).scrollTop();
-    let isDark = false; //배경이 어두운 영역이 맞는지 확인하는 변수
-    for(const section of sections){
-      if(scTop >= section.top && scTop < section.bottom){ //최소값
-        isDark = true;
-        break;
-      } //bottom 닫은 것
-    }; //아래 isDark가 참일 때 isDark 만 써도 됨. for문 받은 것
-    if(isDark == true){
-      $(hd).addClass("dark-mode");
+
+  //푸터 복제 //작은따옴표가 생긴 건 역슬래쉬+" 하면 됨
+  let ftSection = "<section class=\"section fp-auto-height\" id=\"main-ft\"></section>";
+  let ftElement = $(".footer-container").clone();
+  let fullPageCreated = false;
+
+  normalFunction();
+  fullPageResize();
+  $(window).resize(function(){
+    normalFunction();
+    fullPageResize();
+  });
+
+  function createFullPage(){
+    if(!fullPageCreated) {
+      $("#hd-main").append(ftSection);//맨끝에 삽입된다는 뜻:append
+      $("#main-ft").append(ftElement);
+      $("#hd-main").fullpage({
+        //풀페이지 옵션 추가
+        licenseKey: null,
+        menu: "#fp-nav-hor",
+        anchors: ["Main","Product","Sustainability","News","Career","Info"],
+        afterLoad: function(origin, destination, direction){
+          let loadedSection = this;
+          // console.log(destination.index);
+          $("#pf-gnb-hor > a").removeClass("active");
+          $("#pf-gnb-hor").fadeIn(300);
+          if(destination.index == 0) {
+            $("#hd-header").addClass("dark-mode");
+            $("#pf-gnb-hor").removeClass("light");
+            $("#pf-gnb-hor > a").eq(0).addClass("active");
+          } else if(destination.index == 1){
+            $("#hd-header").removeClass("dark-mode");
+            $("#pf-gnb-hor").addClass("light");
+            $("#pf-gnb-hor > a").eq(1).addClass("active");
+          } else if(destination.index == 2){
+            $("#hd-header").addClass("dark-mode");
+            $("#pf-gnb-hor").removeClass("light");
+            $("#pf-gnb-hor > a").eq(2).addClass("active");
+          } else if(destination.index == 3){
+            $("#hd-header").removeClass("dark-mode");
+            $("#pf-gnb-hor").addClass("light");
+            $("#pf-gnb-hor > a").eq(3).addClass("active");
+          } else if(destination.index == 4){
+            $("#hd-header").addClass("dark-mode");
+            $("#pf-gnb-hor").removeClass("light");
+            $("#pf-gnb-hor > a").eq(4).addClass("active");
+          } else if(destination.index == 5){
+            $("#pf-gnb-hor").fadeOut(300);
+          }
+        }
+      });
+      fullPageCreated = true;
+    }
+  }
+
+  function fullPageResize() {
+    if (!body.hasClass("mo")) {
+      createdFullPage();
+      $(".gototop").click(function(){
+				$.fn.fullpage.moveTo(1);
+			});
     } else {
-      $(hd).removeClass("dark-mode");
-    }
-  }); //scroll 받은 것
-
-
-
-  // 2. if문 사용_ 최대최소 구간 좌표 구해서 조건문으로 완성
-  // let secMin = [];
-  // let secMax = [];
-  // const sec = $(".main-section");
-  // for(let i = 0; i < 5; i += 2 ){ //반복문으로 최대, 최소 값만 계산
-  //   secMin[i] = sec.eq(i).offset().top;
-  //   secMax[i] = sec.eq(i).offset().top + sec.eq(i).height();
-  // }
-  // $(window).scroll(function(){ //상수를 사용하고 있어서 좋은 방법은 아님.
-  //   scTop = $(window).scrollTop();
-  //   if(scTop >= secMin[0] && scTop < secMax[0]){ //어두운 섹션을 보고 있을 때
-  //     $(hd).addClass("dark-mode");
-  //   } else if(scTop >= secMin[2] && scTop < secMax[2]) {
-  //     $(hd).addClass("dark-mode");
-  //   } else if(scTop >= secMin[4] && scTop < secMax[4]) {
-  //     $(hd).addClass("dark-mode");
-  //   } else {
-  //     $(hd).removeClass("dark-mode");
-  //   }
-  // });
-
-// 히어로 구현
-  const visualBtn = ".visual-pagination button";
-  const vSlide = ".v-slide";
-  const vTxt = ".v-txt";
-  let activeNum = 0;
-  $(visualBtn).click(function(){
-    // 비주얼 페이지 버튼 초기화
-    $(visualBtn).removeClass("active");
-    $(this).addClass("active");
-    $(vTxt).removeClass("animate");
-    activeNum = $(this).data("index");
-    // 모든 슬라이드 초기화
-    $(vSlide).removeClass("active prev");
-    $(vSlide).each(function(){
-      const video = $(this).find("video").get(0);
-      video.pause();
-      video.currentTime = 0;
-      const slideIndex = $(this).data("index");
-      if(slideIndex < activeNum){
-        $(this).addClass("prev");
+      $(".gototop").click(function(){
+        $("html, body").stop().animate({
+          scrollTop: 0
+        }, 600, "linear");
+      });
+    
+      if(fullPageCreated){
+        $.fn.fullpage.destroy("all"); // 풀페이지 날리기
+        $("#pf-gnb-hor").fadeOut(300);
+        $("#main-ft").remove();
+        fullPageCreated = false;
       }
-    });
-
-    // 선택한 번호의 슬라이드 활성화
-    let currentSlide = $(vSlide).eq(activeNum);
-    currentSlide.addClass("active");
-
-    let txt = $(vSlide).eq(activeNum).find(vTxt);
-    setTimeout(() => {
-      txt.addClass("animate");
-    }, 500);
-
-    let video = currentSlide.find("video").get(0);
-    video.play();
-
-    //startTextAnimation(currentSlide);
-
-    // 텍스트 애니메이션
-    function startTextAnimation(vSlide) {
-      const text = $(vSlide).find(".v-txt");
-      text.removeClass("animate");
-      setTimeout(() => {
-        text.addClass("animate");
-      }, 500);
     }
-  }); //버튼 클릭했을 때
+  }
+
+  //모바일에서만 실행
+  function normalFunction(){
+    if(body.hasClass("mo")) {
+      // 각 섹션별 헤더디자인 구현(다크모드)
+      // 1. each() 문법으로 완성
+      let sections = []; //각 섹션별(.wh) 위치를 담을 배열
+      const updateSectionPos = () => { //화살표 함수. 비교연산자아님!! 내가 속한 구간은 this로 봄
+        sections = [];
+        $(".main-section.wh").each(function(){//내용은 그룹괄호, 블럭괄호 안에서 엔터 치고 적어야 한다.
+          sections.push({ //뭔가 집어넣을 때 push
+            top: $(this).offset().top,
+            bottom: $(this).offset().top + $(this).height()
+          }); 
+        }); 
+        //console.log(sections);
+      } 
+      updateSectionPos();
+      $(window).on("resize", updateSectionPos);
+      $(window).on("scroll", () => {
+        scTop = $(window).scrollTop();
+        let isDark = false; //배경이 어두운 영역이 맞는지 확인하는 변수
+        for(const section of sections){
+          if(scTop >= section.top && scTop < section.bottom){ //최소값
+            isDark = true;
+            break;
+          } //bottom 닫은 것
+        }; //아래 isDark가 참일 때 isDark 만 써도 됨. for문 받은 것
+        if(isDark == true){
+          $(hd).addClass("dark-mode");
+        } else {
+          $(hd).removeClass("dark-mode");
+        }
+      }); //scroll 받은 것
+    }
+  } 
 }); //전체 제이쿼리
